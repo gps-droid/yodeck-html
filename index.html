@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="is">
+<head>
+<meta charset="UTF-8">
+<title>ELG upplýsingaskjár</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  /* ============================================================
+     ELG · SITE BULLETIN
+     1080 × 1920 portrait · Yodeck + Raspberry Pi
+     Visual redesign only — data layer + element IDs untouched.
+     ============================================================ */
+
+  :root {
+    /* cool-dark palette, cream ink */
+    --bg:        #0f1218;
+    --ink:       #f1e9d8;
+    --ink-dim:   #94908a;
+    --ink-faint: #5a5a5f;
+    --rule:      #2a3142;
+    --rule-soft: #1d2230;
+    --surface:   #171c28;
+    --surface-2: #1f2533;
+
+    --accent:    #5b9bd5;   /* site blue */
+    --accent-dim:#2f5478;
+    --good:      #9bbf6f;
+    --warn:      #e8b264;
+    --bad:       #e8624a;
+
+    --serif:  'Newsreader', 'Times New Roman', serif;
+    --sans:   'Space Grotesk', 'Helvetica Neue', system-ui, sans-serif;
+    --mono:   'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 1080px;
+    height: 1920px;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-weight: 400;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* faint paper-grain so the dark doesn't feel flat */
+  body::before {
+    content: "";
+    position: fixed; inset: 0; pointer-events: none;
+    background-image:
+      radial-gradient(circle at 30% 20%, rgba(91,155,213,0.06), transparent 60%),
+      radial-gradient(circle at 80% 90%, rgba(241,233,216,0.025), transparent 55%);
+    z-index: 0;
+  }
+
+  .screen {
+    position: relative;
+    z-index: 1;
+    width: 1080px;
+    height: 1920px;
+    padding: 40px 48px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  /* ============================================================
+     MASTHEAD
+     ============================================================ */
+  .masthead {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 32px;
+    padding: 0 4px 22px;
+    border-bottom: none;
+    position: relative;
+  }
+  .masthead::after {
+    content: none;
+  }
+  .wordmark {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 72px;
+    line-height: 0.85;
+    letter-spacing: -2px;
+  }
+  .wordmark em {
+    font-style: italic;
+    font-weight: 300;
+    color: var(--ink-dim);
+  }
+  .masthead-sub {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-top: 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .masthead-sub .dot {
+    width: 4px; height: 4px; border-radius: 50%;
+    background: var(--ink-faint);
+  }
+  .clock {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .clock-time {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 84px;
+    line-height: 0.9;
+    letter-spacing: -2px;
+  }
+  .clock-date {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-top: 10px;
+  }
+
+  /* ============================================================
+     SECTION (panel) BASE — subtle card on warm-dark surface
+     ============================================================ */
+  .section {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 22px 32px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .section-eyebrow {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+  .section-title {
+    font-family: var(--serif);
+    font-style: normal;
+    font-weight: 500;
+    font-size: 22px;
+    letter-spacing: -0.3px;
+    color: var(--ink);
+  }
+  .section-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ============================================================
+     PROJECT MILESTONES — progress track
+     ============================================================ */
+  .milestones-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+  .milestones-stats strong {
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 13px;
+    margin: 0 6px 0 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .milestones-track-wrap {
+    position: relative;
+    margin: 0 6px;
+    height: 86px;
+  }
+  .ms-track {
+    position: relative;
+    height: 4px;
+    background: var(--rule);
+    border-radius: 2px;
+  }
+  .ms-track-fill {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+  .ms-markers {
+    position: absolute;
+    left: 0; right: 0;
+    top: 0;
+    height: 4px;
+    pointer-events: none;
+  }
+  .ms-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--ink-faint);
+  }
+  .ms-marker.completed {
+    background: var(--accent);
+    border-color: var(--accent);
+  }
+  .ms-marker.upcoming {
+    background: var(--surface);
+    border-color: var(--ink-faint);
+  }
+  .ms-marker.overdue {
+    background: var(--surface);
+    border-color: var(--warn);
+  }
+  .ms-now {
+    position: absolute;
+    top: -6px; bottom: -6px;
+    width: 2px;
+    background: var(--ink);
+    transform: translateX(-1px);
+    opacity: 0.7;
+  }
+  .ms-labels {
+    position: absolute;
+    left: 0; right: 0;
+    top: 22px;
+  }
+  .ms-label {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    text-align: center;
+    white-space: nowrap;
+  }
+  .ms-label.staggered { top: 18px; }
+  .ms-label::before {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 6px;
+    background: var(--rule);
+    margin: 0 auto 4px;
+  }
+  .ms-label.staggered::before { height: 14px; margin-bottom: 4px; }
+  .ms-label-name {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: -0.1px;
+  }
+  .ms-label.completed .ms-label-name { color: var(--accent); }
+  .ms-label-date {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-dim);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     COUNTDOWN BANNER — fish in tank, 20 April 2027
+     ============================================================ */
+  .countdown {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 28px;
+    align-items: stretch;
+    /* no padding-bottom rule here — .section already supplies card chrome */
+    padding: 0;
+    overflow: hidden;
+  }
+  .countdown.section { padding: 0; }  /* let the photo bleed to card edge */
+  .countdown > .countdown-info { padding: 22px 32px 22px 0; }
+  .countdown-photo {
+    position: relative;
+    min-height: 150px;
+    background-color: #0d101a;
+    background-image:
+      repeating-linear-gradient(135deg,
+        transparent 0,
+        transparent 14px,
+        rgba(241,233,216,0.035) 14px,
+        rgba(241,233,216,0.035) 15px);
+    overflow: hidden;
+  }
+  .countdown-photo img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .countdown-photo[data-has-image="true"] img { display: block; }
+  .countdown-photo[data-has-image="true"] .countdown-photo-cap { display: none; }
+  .countdown-photo-cap {
+    position: absolute; bottom: 10px; left: 12px; right: 12px;
+    font-family: var(--mono); font-size: 9px;
+    letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .countdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .countdown-eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .countdown-name {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 30px;
+    line-height: 1;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+  }
+  .countdown-date {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-top: -6px;
+  }
+  .countdown-numbers {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    margin-top: 10px;
+    padding-top: 0;
+    border-top: none;
+  }
+  .countdown-cell { display: flex; flex-direction: column; }
+  .countdown-cell .num {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 46px;
+    line-height: 0.9;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    letter-spacing: -2px;
+  }
+  .countdown-cell .lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 8px;
+  }
+
+  /* ============================================================
+     ROW SPLIT — two cards side by side with breathing room
+     Used for: On-site | Accommodation
+                Manpower | Flutningar
+     ============================================================ */
+  .row-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .onsite {
+    display: flex;
+    flex-direction: column;
+  }
+  .onsite-kicker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .onsite-number {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 118px;
+    line-height: 1;
+    letter-spacing: -4px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .onsite-label {
+    margin-top: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .onsite-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+  }
+  .onsite-stat {
+    display: flex;
+    flex-direction: column;
+  }
+  .onsite-stat-lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 6px;
+  }
+  .onsite-stat-val {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 38px;
+    line-height: 0.95;
+    font-variant-numeric: tabular-nums;
+  }
+  .pulse {
+    display: inline-block;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(91,155,213,0.7);
+    animation: pulse 2.4s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(91,155,213,0.7); }
+    70%  { box-shadow: 0 0 0 14px rgba(91,155,213,0); }
+    100% { box-shadow: 0 0 0 0 rgba(91,155,213,0); }
+  }
+
+  /* ============================================================
+     MANPOWER
+     ============================================================ */
+  .manpower-chart {
+    display: flex;
+    flex-direction: column;
+  }
+  .mp-row {
+    display: grid;
+    grid-template-columns: 120px 1fr 50px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .mp-row:last-child { border-bottom: none; }
+  .mp-company {
+    font-family: var(--sans);
+    font-weight: 500;
+    font-size: 13px;
+    color: var(--ink);
+    letter-spacing: -0.1px;
+    line-height: 1.1;
+  }
+  .mp-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .mp-bar {
+    height: 10px;
+    background: var(--ink-faint);
+    border-radius: 0;
+    position: relative;
+    transition: width 0.4s ease;
+  }
+  .mp-bar.last { background: var(--ink-faint); opacity: 0.45; }
+  .mp-bar.this { background: var(--accent); height: 14px; }
+  .mp-bar.next {
+    background: transparent;
+    border: 1px dashed var(--accent-dim);
+    opacity: 0.9;
+  }
+  .mp-bar-val {
+    position: absolute;
+    right: -30px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--ink-dim);
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-total {
+    text-align: right;
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 24px;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+  }
+  .mp-legend {
+    display: flex;
+    gap: 24px;
+    margin-top: 16px;
+    padding-top: 0;
+    border-top: none;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+  .mp-legend-item { display: flex; align-items: center; gap: 10px; }
+  .mp-legend-swatch { width: 16px; height: 6px; border-radius: 0; }
+
+  /* ============================================================
+     TWO COLUMN
+     ============================================================ */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 36px;
+  }
+  .two-col > .section { position: relative; }
+  .two-col > .section + .section::before {
+    content: "";
+    position: absolute;
+    left: -18px; top: 0; bottom: 0;
+    width: 1px; background: var(--rule);
+  }
+
+  /* ============================================================
+     TRANSPORT — timetable
+     ============================================================ */
+  .transport-list { display: flex; flex-direction: column; }
+  .transport-page-indicator {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+  .tp-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    opacity: 0.4;
+    transition: all 400ms ease;
+  }
+  .tp-dot.active {
+    background: var(--accent);
+    opacity: 1;
+    width: 18px;
+    border-radius: 3px;
+  }
+  .transport-row {
+    display: grid;
+    grid-template-columns: 84px 1fr auto;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .transport-row:last-child { border-bottom: none; }
+  .transport-time {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 15px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .transport-detail-main {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .transport-detail-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-dim);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .transport-status {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 4px 8px;
+    border: 1px solid var(--rule);
+    color: var(--ink-dim);
+    border-radius: 0;
+    background: transparent;
+  }
+  .transport-status.delivered {
+    color: var(--good);
+    border-color: rgba(155,191,111,0.4);
+  }
+  .transport-status.in-transit {
+    color: var(--accent);
+    border-color: rgba(91,155,213,0.4);
+  }
+  .transport-status.planned {
+    color: var(--ink-dim);
+    border-color: var(--rule);
+  }
+  /* legacy aliases (keep older data working) */
+  .transport-status.confirmed {
+    color: var(--good);
+    border-color: rgba(155,191,111,0.4);
+  }
+  .transport-status.pending   {
+    color: var(--warn);
+    border-color: rgba(232,178,100,0.4);
+  }
+
+  /* ============================================================
+     ACCOMMODATION — quiet, two-hotel summary
+     ============================================================ */
+  .hotel-list { display: flex; flex-direction: column; gap: 22px; }
+  .hotel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .hotel-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .hotel-name {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0;
+    line-height: 1.2;
+  }
+  .hotel-figures {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .hotel-figures .hotel-occupied {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+  }
+  .hotel-figures .hotel-slash {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--ink-faint);
+    margin: 0 2px;
+  }
+  .hotel-figures .hotel-total {
+    font-size: 16px;
+    font-weight: 400;
+    color: var(--ink-dim);
+  }
+  .hotel-bar {
+    display: block;
+    height: 4px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+  .hotel-bar-occ { background: var(--accent); height: 100%; }
+  .hotel-foot {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ============================================================
+     WEATHER — dual hero (temp + wind), small stats below,
+                  secondary station strip
+     ============================================================ */
+  .weather {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+    padding: 4px 0 6px;
+  }
+  .weather-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: end;
+  }
+  .weather-hero > div + div {
+    padding-left: 0;
+    border-left: none;
+  }
+  .weather-main {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .weather-temp {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 116px;
+    line-height: 0.85;
+    letter-spacing: -5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .weather-unit {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 38px;
+    color: var(--ink-dim);
+    line-height: 1;
+  }
+  .weather-cond {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 16px;
+    color: var(--ink-dim);
+    margin-top: 10px;
+    line-height: 1.3;
+  }
+
+  /* wind hero */
+  .weather-wind-val {
+    font-family: var(--serif);
+    font-weight: 300;
+    font-size: 78px;
+    line-height: 0.85;
+    letter-spacing: -3px;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+  }
+  .weather-wind-dir {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 18px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-top: 12px;
+  }
+  .weather-wind-lbl {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  /* secondary grid */
+  .weather-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 20px 24px;
+    padding-top: 0;
+    border-top: none;
+  }
+  .weather-item {
+    padding-top: 0;
+    border-top: none;
+  }
+  .weather-item-val {
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.5px;
+  }
+  .weather-item-lbl {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  /* secondary station strip */
+  .weather-secondary {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 24px;
+    margin-top: 6px;
+    padding-top: 18px;
+    border-top: 1px dotted var(--rule);
+    color: var(--ink-dim);
+  }
+  .wx-sec-tag {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .wx-sec-tag .wx-sec-name {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .wx-sec-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 20px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+  .wx-sec-figures .val {
+    font-size: 16px;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .wx-sec-figures .lbl {
+    font-size: 9px;
+    color: var(--ink-faint);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-left: 6px;
+  }
+  .wx-sec-updated {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* ============================================================
+     FOOTER
+     ============================================================ */
+  .footer {
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px 4px 0;
+    border-top: none;
+  }
+  .footer-mark {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .footer-mark .bullet {
+    width: 6px; height: 6px; background: var(--accent); border-radius: 50%;
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- MASTHEAD -->
+  <header class="masthead">
+    <div>
+      <div class="wordmark">Eldisgarður</div>
+      <div class="masthead-sub">
+        <span>Site information overview</span>
+      </div>
+    </div>
+    <div class="clock">
+      <div class="clock-time" id="clockTime">--:--</div>
+      <div class="clock-date" id="clockDate">—</div>
+    </div>
+  </header>
+
+  <!-- ROW 1 — ON SITE | ACCOMMODATION -->
+  <div class="row-split">
+
+    <!-- ON SITE HERO -->
+    <section class="section onsite">
+      <div class="onsite-kicker"><span class="pulse"></span>Live</div>
+      <div class="onsite-number" id="onsiteCount">142</div>
+      <div class="onsite-label">Persons currently on site</div>
+      <div class="onsite-stats">
+        <div class="onsite-stat">
+          <div class="onsite-stat-lbl">Peak today</div>
+          <div class="onsite-stat-val" id="onsitePeak">168</div>
+        </div>
+        <div class="onsite-stat">
+          <div class="onsite-stat-lbl">Avg this week</div>
+          <div class="onsite-stat-val" id="onsiteAvg">134</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ACCOMMODATION -->
+    <section class="section">
+      <div class="section-head">
+        <div class="section-eyebrow">
+          <span class="section-num">01</span>
+          <span class="section-title">Accommodation</span>
+        </div>
+      </div>
+      <div class="hotel-list" id="hotelList"></div>
+    </section>
+
+  </div>
+
+  <!-- ROW 2 — MANPOWER | FLUTNINGAR -->
+  <div class="row-split">
+
+    <!-- MANPOWER -->
+    <section class="section">
+      <div class="section-head">
+        <div class="section-eyebrow">
+          <span class="section-num">02</span>
+          <span class="section-title">Manpower by company</span>
+        </div>
+        <div class="section-meta">Last · This · Next</div>
+      </div>
+      <div class="manpower-chart" id="manpowerChart"></div>
+      <div class="mp-legend">
+        <div class="mp-legend-item"><div class="mp-legend-swatch" style="background:var(--ink-faint);opacity:0.45"></div>Last</div>
+        <div class="mp-legend-item"><div class="mp-legend-swatch" style="background:var(--accent);height:10px"></div>This</div>
+        <div class="mp-legend-item"><div class="mp-legend-swatch" style="border:1px dashed var(--accent-dim);background:transparent"></div>Next</div>
+      </div>
+    </section>
+
+    <!-- FLUTNINGAR -->
+    <section class="section">
+      <div class="section-head">
+        <div class="section-eyebrow">
+          <span class="section-num">03</span>
+          <span class="section-title">Flutningar</span>
+        </div>
+        <div class="transport-page-indicator" id="transportPageIndicator"></div>
+      </div>
+      <div class="transport-list" id="transportList"></div>
+    </section>
+
+  </div>
+
+  <!-- PROJECT MILESTONES -->
+  <section class="section milestones">
+    <div class="section-head">
+      <div class="section-eyebrow">
+        <span class="section-num">04</span>
+        <span class="section-title">Project milestones</span>
+      </div>
+      <div class="section-meta" id="msTarget">Target —</div>
+    </div>
+    <div class="milestones-stats">
+      <span><strong id="msCompleted">—</strong>of <strong id="msTotal">—</strong>completed</span>
+      <span><strong id="msDaysLeft">—</strong>days remaining</span>
+    </div>
+    <div class="milestones-track-wrap">
+      <div class="ms-track">
+        <div class="ms-track-fill" id="msTrackFill" style="width:0%"></div>
+      </div>
+      <div class="ms-markers" id="msMarkers"></div>
+      <div class="ms-labels" id="msLabels"></div>
+    </div>
+  </section>
+
+  <!-- COUNTDOWN BANNER -->
+  <section class="countdown">
+    <!-- swap the inner contents for an <img src="…"> when a photo is available -->
+    <div class="countdown-photo" id="countdownPhoto">
+      <span class="countdown-photo-cap">Photo · fish in tank</span>
+    </div>
+    <div class="countdown-info">
+      <div class="countdown-eyebrow"><span class="pulse"></span>Countdown</div>
+      <div class="countdown-name">Fish in tank</div>
+      <div class="countdown-date">20 April 2027 · 00:00</div>
+      <div class="countdown-numbers">
+        <div class="countdown-cell">
+          <div class="num" id="countdownDays">—</div>
+          <div class="lbl">Days</div>
+        </div>
+        <div class="countdown-cell">
+          <div class="num" id="countdownHours">—</div>
+          <div class="lbl">Hours</div>
+        </div>
+        <div class="countdown-cell">
+          <div class="num" id="countdownMinutes">—</div>
+          <div class="lbl">Minutes</div>
+        </div>
+        <div class="countdown-cell">
+          <div class="num" id="countdownSeconds">—</div>
+          <div class="lbl">Seconds</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEATHER -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-eyebrow">
+        <span class="section-num">05</span>
+        <span class="section-title">Site weather</span>
+        <span class="section-meta" style="margin-left:6px">· <span id="wxStationName">Primary station</span></span>
+      </div>
+      <div class="section-meta" id="weatherUpdated">Updated —</div>
+    </div>
+    <div class="weather">
+      <div class="weather-hero">
+        <div>
+          <div class="weather-main">
+            <div class="weather-temp" id="wxTemp">4</div>
+            <div class="weather-unit">°C</div>
+          </div>
+          <div class="weather-cond" id="wxCond">Partly cloudy · feels like 1°C</div>
+        </div>
+        <div>
+          <div class="weather-wind-val" id="wxWind">8.4 m/s</div>
+          <div class="weather-wind-dir">Wind NW</div>
+          <div class="weather-wind-lbl">Wind speed · direction</div>
+        </div>
+      </div>
+      <div class="weather-grid">
+        <div class="weather-item">
+          <div class="weather-item-val" id="wxGust">14.2 m/s</div>
+          <div class="weather-item-lbl">Gust</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-item-val" id="wxHum">72%</div>
+          <div class="weather-item-lbl">Humidity</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-item-val" id="wxRain">0.4 mm</div>
+          <div class="weather-item-lbl">Rain today</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-item-val" id="wxPress">1011 hPa</div>
+          <div class="weather-item-lbl">Pressure</div>
+        </div>
+        <div class="weather-item">
+          <div class="weather-item-val" id="wxFeels">—</div>
+          <div class="weather-item-lbl">Feels like</div>
+        </div>
+      </div>
+
+      <!-- SECONDARY STATION STRIP -->
+      <div class="weather-secondary">
+        <div class="wx-sec-tag">
+          <span class="wx-sec-name" id="wxSecStation">—</span>
+        </div>
+        <div class="wx-sec-figures">
+          <span><span class="val" id="wxSecTemp">—</span><span class="lbl">temp</span></span>
+          <span><span class="val" id="wxSecWind">—</span><span class="lbl" id="wxSecWindDir">wind</span></span>
+        </div>
+        <div class="wx-sec-updated" id="wxSecUpdated">—</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-mark"><span class="bullet"></span>ELG · Internal display</div>
+    <div id="lastRefresh">Refreshed —</div>
+  </footer>
+
+</div>
+
+<script>
+/* ============================================================
+   DATA LAYER — UNCHANGED.
+   Identical function names + return shapes as original.
+   ============================================================ */
+
+async function fetchOnSite() {
+  return {
+    current: 142,
+    peakToday: 168,
+    avgThisWeek: 134
+  };
+}
+
+async function fetchManpower() {
+  return [
+    { company: 'Main Contractor', last: 58, thisWeek: 64, next: 70 },
+    { company: 'Electrical Co.',  last: 22, thisWeek: 28, next: 26 },
+    { company: 'Mechanical',      last: 18, thisWeek: 20, next: 24 },
+    { company: 'Steel Works',     last: 14, thisWeek: 12, next: 16 },
+    { company: 'Concrete Crew',   last: 10, thisWeek: 14, next: 12 },
+    { company: 'Site Services',   last:  8, thisWeek:  8, next:  9 }
+  ];
+}
+
+// -------- 3. TRANSPORT / FLUTNINGAR --------
+// For now, reads from a local transport.json file sitting next to this HTML.
+// Update this URL when data hosting (GitHub, SharePoint, etc.) is sorted.
+const TRANSPORT_URL = 'transport.json';
+
+async function fetchTransport() {
+  try {
+    const res = await fetch(TRANSPORT_URL);
+    if (!res.ok) throw new Error('Transport fetch failed: ' + res.status);
+    return await res.json();
+  } catch (err) {
+    console.error('Transport fetch failed, using placeholder:', err);
+    // Fallback so the panel never goes blank
+    return [
+      { date: '25 May', item: 'Placeholder — transport.json not found', supplier: '—', status: 'planned' }
+    ];
+  }
+}
+
+async function fetchHotels() {
+  return [
+    { name: 'Fell',  sub: '', occupied: 42, total: 50 },
+    { name: 'Hraun', sub: '', occupied: 64, total: 72 }
+  ];
+}
+
+/* ---------- PROJECT MILESTONES ---------- */
+// -------- 6. PROJECT MILESTONES (Autodesk ACC / Forma) --------
+// IMPORTANT: there is no simple public REST endpoint to read tasks/
+// milestones from ACC Schedule today. Realistic options, easiest first:
+//
+//   A. Manual JSON file on SharePoint. Quickest start. Whoever owns the
+//      schedule updates a small JSON file when a milestone is hit.
+//      fetch('https://yourcompany.sharepoint.com/.../milestones.json')
+//
+//   B. Power Automate. There IS a Microsoft Project / P6 schedule
+//      somewhere upstream of ACC — pull from THAT source instead and
+//      write a JSON file. Avoids the ACC API problem entirely.
+//
+//   C. ACC API via a server-side script (3-legged OAuth, needs an APS
+//      app registration and someone comfortable with Node/Python).
+//      Schedule data is exposed via APS but it's not a 5-minute job.
+//
+// For now this returns sample data so the panel renders. Replace the
+// body when you've decided which source to wire up. Shape must stay:
+//   { projectStart, targetEnd, milestones: [{ name, date, completed }] }
+// `completed` is a boolean. `date` is YYYY-MM-DD.
+async function fetchMilestones() {
+  return {
+    projectStart: '2024-03-01',
+    targetEnd:    '2027-10-29',
+    milestones: [
+      { name: 'Foundation',      date: '2025-10-02', completed: true  },
+      { name: 'Roof closed OG1', date: '2026-10-19', completed: false },
+      { name: 'Wet testing OG1', date: '2027-03-02', completed: false }
+    ]
+  };
+}
+
+// -------- 5. WEATHER (Ecowitt) --------
+// Paste your three values below. Keep them private — anyone with these
+// can read your station's data (but not modify anything).
+const ECOWITT_APP_KEY = 'PASTE_YOUR_APPLICATION_KEY_HERE';
+const ECOWITT_API_KEY = 'PASTE_YOUR_API_KEY_HERE';
+const ECOWITT_MAC     = 'AA:BB:CC:DD:EE:FF';   // primary station MAC
+
+// Optional second station — set MAC to empty string '' if you only have one
+const ECOWITT_MAC_2   = '';
+
+async function fetchOneStation(mac, stationName) {
+  const url = 'https://api.ecowitt.net/api/v3/device/real_time'
+    + '?application_key=' + ECOWITT_APP_KEY
+    + '&api_key='         + ECOWITT_API_KEY
+    + '&mac='             + mac
+    + '&temp_unitid=1'      // 1=Celsius
+    + '&pressure_unitid=3'  // 3=hPa
+    + '&wind_speed_unitid=6'// 6=m/s
+    + '&rainfall_unitid=12';// 12=mm
+
+  const res  = await fetch(url);
+  const json = await res.json();
+  if (json.code !== 0) {
+    throw new Error('Ecowitt API error ' + json.code + ': ' + json.msg);
+  }
+
+  // Each reading is { value, unit, time } — pull the number out
+  const d   = json.data || {};
+  const num = v => (v && v.value !== undefined && v.value !== '-')
+    ? parseFloat(v.value) : null;
+
+  const tempC      = num(d.outdoor?.temperature);
+  const feelsC     = num(d.outdoor?.app_temp) ?? num(d.outdoor?.feels_like);
+  const humidity   = num(d.outdoor?.humidity);
+  const windMs     = num(d.wind?.wind_speed);
+  const gustMs     = num(d.wind?.wind_gust);
+  const windDirDeg = num(d.wind?.wind_direction);
+  const pressureHpa= num(d.pressure?.relative);
+  const rainToday  = num(d.rainfall?.daily);
+
+  // degrees → compass
+  const dirs = ['N','NE','E','SE','S','SW','W','NW'];
+  const windDir = windDirDeg !== null
+    ? dirs[Math.round(windDirDeg / 45) % 8]
+    : '—';
+
+  // Friendly condition line based on what's actually happening
+  const rainRate = num(d.rainfall?.rain_rate) ?? 0;
+  let cond = 'Outdoor reading';
+  if (rainRate > 0.5)      cond = 'Raining';
+  else if (windMs > 17)    cond = 'Stormy · high winds';
+  else if (windMs > 10)    cond = 'Windy';
+  else if (tempC !== null && tempC < 0) cond = 'Below freezing';
+
+  return {
+    stationName: stationName,
+    tempC, feelsC,
+    condition:   cond,
+    windMs, windDir, gustMs,
+    humidity, rainMmToday: rainToday, pressureHpa,
+    updated: new Date()
+  };
+}
+
+async function fetchWeather() {
+  try {
+    const primary = await fetchOneStation(ECOWITT_MAC, 'Á svæði');
+    let secondary = null;
+    if (ECOWITT_MAC_2) {
+      try {
+        const s = await fetchOneStation(ECOWITT_MAC_2, 'Innkeyrsla');
+        secondary = {
+          stationName: s.stationName,
+          tempC: s.tempC,
+          windMs: s.windMs,
+          windDir: s.windDir,
+          updated: s.updated
+        };
+      } catch (e) {
+        console.warn('Secondary station failed:', e);
+      }
+    }
+    return { ...primary, secondary };
+  } catch (err) {
+    console.error('Ecowitt fetch failed:', err);
+    return {
+      stationName: 'Á svæði',
+      tempC: null, feelsC: null, condition: 'Weather unavailable',
+      windMs: null, windDir: '—', gustMs: null,
+      humidity: null, rainMmToday: null, pressureHpa: null,
+      updated: new Date(), secondary: null
+    };
+  }
+}
+
+/* ============================================================
+   RENDER LAYER — same element IDs and classes as original.
+   ============================================================ */
+
+function renderClock() {
+  const now = new Date();
+  document.getElementById('clockTime').textContent =
+    now.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  document.getElementById('clockDate').textContent =
+    now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/* ---------- COUNTDOWN: Fish in tank · 20 April 2027 ---------- */
+const COUNTDOWN_TARGET = new Date('2027-04-20T00:00:00');
+function renderCountdown() {
+  let diff = Math.max(0, COUNTDOWN_TARGET - new Date());
+  const days    = Math.floor(diff / 86400000); diff -= days * 86400000;
+  const hours   = Math.floor(diff / 3600000);  diff -= hours * 3600000;
+  const minutes = Math.floor(diff / 60000);    diff -= minutes * 60000;
+  const seconds = Math.floor(diff / 1000);
+  document.getElementById('countdownDays').textContent    = days;
+  document.getElementById('countdownHours').textContent   = String(hours).padStart(2, '0');
+  document.getElementById('countdownMinutes').textContent = String(minutes).padStart(2, '0');
+  document.getElementById('countdownSeconds').textContent = String(seconds).padStart(2, '0');
+}
+
+async function renderOnSite() {
+  const d = await fetchOnSite();
+  document.getElementById('onsiteCount').textContent = d.current;
+  document.getElementById('onsitePeak').textContent  = d.peakToday;
+  document.getElementById('onsiteAvg').textContent   = d.avgThisWeek;
+}
+
+async function renderManpower() {
+  const rows = await fetchManpower();
+  const maxVal = Math.max(...rows.flatMap(r => [r.last, r.thisWeek, r.next]));
+  const container = document.getElementById('manpowerChart');
+  container.innerHTML = rows.map(r => {
+    const pct = v => (v / maxVal) * 100;
+    return `
+      <div class="mp-row">
+        <div class="mp-company">${r.company}</div>
+        <div class="mp-bars">
+          <div class="mp-bar last" style="width:${pct(r.last)}%"><span class="mp-bar-val">${r.last}</span></div>
+          <div class="mp-bar this" style="width:${pct(r.thisWeek)}%"><span class="mp-bar-val">${r.thisWeek}</span></div>
+          <div class="mp-bar next" style="width:${pct(r.next)}%"><span class="mp-bar-val">${r.next}</span></div>
+        </div>
+        <div class="mp-total">${r.thisWeek}</div>
+      </div>`;
+  }).join('');
+}
+
+/* ---------- TRANSPORT PAGINATION ---------- */
+// Pagination state — survives between calls
+let _transportData = [];
+let _transportPage = 0;
+let _transportRotationTimer = null;
+const TRANSPORT_ROWS_PER_PAGE = 7;
+const TRANSPORT_PAGE_DURATION_MS = 10000;   // 10 seconds per page
+
+async function renderTransport() {
+  _transportData = await fetchTransport();
+  _transportPage = 0;
+  paintTransportPage();
+  // Restart the rotation timer whenever data refreshes
+  if (_transportRotationTimer) clearInterval(_transportRotationTimer);
+  if (_transportData.length > TRANSPORT_ROWS_PER_PAGE) {
+    _transportRotationTimer = setInterval(advanceTransportPage, TRANSPORT_PAGE_DURATION_MS);
+  }
+}
+
+function advanceTransportPage() {
+  const totalPages = Math.ceil(_transportData.length / TRANSPORT_ROWS_PER_PAGE);
+  _transportPage = (_transportPage + 1) % totalPages;
+  paintTransportPage();
+}
+
+function paintTransportPage() {
+  const statusLabel = { 'delivered': 'Delivered', 'in-transit': 'In transit', 'planned': 'Planned' };
+  const truncate = (s, n) => (s && s.length > n) ? s.slice(0, n - 1) + '…' : (s || '');
+  const start = _transportPage * TRANSPORT_ROWS_PER_PAGE;
+  const slice = _transportData.slice(start, start + TRANSPORT_ROWS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(_transportData.length / TRANSPORT_ROWS_PER_PAGE));
+
+  const listEl = document.getElementById('transportList');
+
+  // Fade out, swap content, fade in
+  listEl.style.transition = 'opacity 600ms ease';
+  listEl.style.opacity = '0';
+  setTimeout(() => {
+    listEl.innerHTML = slice.map(t => `
+      <div class="transport-row">
+        <div class="transport-time">${t.date}</div>
+        <div>
+          <div class="transport-detail-main">${truncate(t.item, 38)}</div>
+          <div class="transport-detail-sub">${t.supplier}</div>
+        </div>
+        <div class="transport-status ${t.status}">${statusLabel[t.status] || t.status}</div>
+      </div>`).join('');
+
+    // Page indicator: dots showing which page we're on
+    const dots = Array.from({length: totalPages}, (_, i) =>
+      `<span class="tp-dot${i === _transportPage ? ' active' : ''}"></span>`
+    ).join('');
+    const indicator = document.getElementById('transportPageIndicator');
+    if (indicator) indicator.innerHTML = totalPages > 1 ? dots : '';
+
+    listEl.style.opacity = '1';
+  }, 600);
+}
+
+async function renderMilestones() {
+  const d = await fetchMilestones();
+  const start = new Date(d.projectStart).getTime();
+  const end   = new Date(d.targetEnd).getTime();
+  const now   = Date.now();
+  const span  = end - start;
+  const elapsed = Math.max(0, Math.min(span, now - start));
+  const progressPct = (elapsed / span) * 100;
+  const daysLeft = Math.max(0, Math.ceil((end - now) / 86400000));
+  const completedCount = d.milestones.filter(m => m.completed).length;
+  const fmt = iso => new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  document.getElementById('msCompleted').textContent = completedCount;
+  document.getElementById('msTotal').textContent     = d.milestones.length;
+  document.getElementById('msDaysLeft').textContent  = daysLeft;
+  document.getElementById('msTarget').textContent    = 'Target ' + fmt(d.targetEnd);
+  document.getElementById('msTrackFill').style.width = progressPct + '%';
+
+  const markersHost = document.getElementById('msMarkers');
+  const labelsHost  = document.getElementById('msLabels');
+  markersHost.innerHTML = '';
+  labelsHost.innerHTML  = '';
+  d.milestones.forEach((m, idx) => {
+    const t = new Date(m.date).getTime();
+    const pct = Math.max(0, Math.min(100, ((t - start) / span) * 100));
+    const cls = m.completed ? 'completed' : (t < now ? 'overdue' : 'upcoming');
+    const marker = document.createElement('div');
+    marker.className = 'ms-marker ' + cls;
+    marker.style.left = pct + '%';
+    markersHost.appendChild(marker);
+    const label = document.createElement('div');
+    label.className = 'ms-label ' + cls + (idx % 2 === 1 ? ' staggered' : '');
+    label.style.left = pct + '%';
+    label.innerHTML = `<div class="ms-label-name">${m.name}</div><div class="ms-label-date">${fmt(m.date)}</div>`;
+    labelsHost.appendChild(label);
+  });
+
+  // "now" indicator on the track
+  const nowMark = document.createElement('div');
+  nowMark.className = 'ms-now';
+  nowMark.style.left = progressPct + '%';
+  markersHost.appendChild(nowMark);
+}
+
+async function renderHotels() {
+  const hotels = await fetchHotels();
+  document.getElementById('hotelList').innerHTML = hotels.map(h => {
+    const free = h.total - h.occupied;
+    const pct  = Math.round(h.occupied / h.total * 100);
+    return `
+    <div class="hotel-card">
+      <div class="hotel-top">
+        <div class="hotel-name">${h.name}</div>
+        <div class="hotel-figures">
+          <span class="hotel-occupied">${h.occupied}</span>
+          <span class="hotel-slash">/</span>
+          <span class="hotel-total">${h.total}</span>
+        </div>
+      </div>
+      <div class="hotel-bar">
+        <div class="hotel-bar-occ" style="width:${pct}%"></div>
+      </div>
+      <div class="hotel-foot">
+        <span>Occupied ${pct}%</span>
+        <span>${free} free</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function renderWeather() {
+  const w = await fetchWeather();
+  // Helper: show value or em-dash if missing
+  const fmt = (v, suffix) => v === null || v === undefined || isNaN(v) ? '—' : `${v}${suffix || ''}`;
+
+  document.getElementById('wxTemp').textContent  = w.tempC === null ? '—' : Math.round(w.tempC);
+  document.getElementById('wxCond').textContent  = w.condition || '';
+  document.getElementById('wxWind').textContent  = fmt(w.windMs, ' m/s');
+  document.querySelector('#wxWind').nextElementSibling.textContent = `Wind ${w.windDir}`;
+  document.getElementById('wxGust').textContent  = fmt(w.gustMs, ' m/s');
+  document.getElementById('wxHum').textContent   = fmt(w.humidity, '%');
+  document.getElementById('wxRain').textContent  = fmt(w.rainMmToday, ' mm');
+  document.getElementById('wxPress').textContent = fmt(w.pressureHpa, ' hPa');
+  document.getElementById('wxFeels').textContent = w.feelsC === null ? '—' : `${Math.round(w.feelsC)}°C`;
+  const stationEl = document.getElementById('wxStationName');
+  if (stationEl && w.stationName) stationEl.textContent = w.stationName;
+  document.getElementById('weatherUpdated').textContent =
+    'Updated ' + w.updated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+
+  // SECONDARY STATION
+  if (w.secondary) {
+    const s = w.secondary;
+    document.getElementById('wxSecStation').textContent = s.stationName;
+    document.getElementById('wxSecTemp').textContent    = s.tempC === null ? '—' : `${Math.round(s.tempC)}°C`;
+    document.getElementById('wxSecWind').textContent    = fmt(s.windMs, ' m/s');
+    document.getElementById('wxSecWindDir').textContent = `wind ${s.windDir}`;
+    document.getElementById('wxSecUpdated').textContent =
+      'Updated ' + s.updated.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  }
+}
+
+async function refreshAll() {
+  await Promise.all([
+    renderOnSite(),
+    renderManpower(),
+    renderTransport(),
+    renderHotels(),
+    renderMilestones(),
+    renderWeather()
+  ]);
+  document.getElementById('lastRefresh').textContent =
+    'Refreshed ' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+}
+
+renderClock();
+renderCountdown();
+refreshAll();
+setInterval(() => { renderClock(); renderCountdown(); }, 1000);
+setInterval(refreshAll, 60 * 1000);
+</script>
+</body>
+</html>
